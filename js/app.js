@@ -16,18 +16,10 @@ const bodyCardClass = 'bg-danger p-1 border-n rounded-bottom-4'
 
 const titleClass = 'text-center fs-3 text-white text-nowrap overflow-hidden'
 
-const getData = async url => {
-  const response = await fetch(url)
-    .then(response => response)
-    .then(data => data.json())
-    .catch(console.log)
-    return response
-}
+const getData = async url => await fetch(url)
 
 
-const createCard = async url => {
-  const { name,  sprites} = await getData(url) 
-
+const createCard = (name, imgSrc) => {
   const card = createEl('div')
   const img = createEl('img')
   const bodyCard = createEl('div')
@@ -40,7 +32,7 @@ const createCard = async url => {
 
   img.setAttribute('class', imgClass)
   img.setAttribute('alt', `${name} imagem`)
-  img.src = `${sprites.front_default}`
+  img.setAttribute('src', imgSrc.front_default)
 
   card.setAttribute('class', classCard)
   card.setAttribute('style', styleCard)
@@ -52,9 +44,21 @@ const createCard = async url => {
   container.append(card)
 }
 
+const setCard = async url => {
+   await getData(url)
+    .then(response => {
+      if(!response.ok) {
+        throw new Error(`Erro HTTP, status: ${response.status}`)
+      }
+      return response.json()
+    })
+    .then(({ name, sprites }) => createCard(name, sprites))
+    .catch(error => console.error(error))
+}
+
 form.addEventListener('submit', e => {
   e.preventDefault()
   const pokemonName = e.target.pokemonName.value
-  createCard(`${endPoint}/${pokemonName.trim()}`)
+  setCard(`${endPoint}/${pokemonName.trim()}`)
   inputPokemonName.value = ''
 })
